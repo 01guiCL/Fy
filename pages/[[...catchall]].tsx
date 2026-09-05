@@ -6,11 +6,9 @@ import {
   PlasmicRootProvider,
 } from "@plasmicapp/loader-nextjs";
 import type { GetStaticPaths, GetStaticProps } from "next";
-
 import Error from "next/error";
 import { useRouter } from "next/router";
 import { PLASMIC } from "@/plasmic-init";
-
 export default function PlasmicLoaderPage(props: {
   plasmicData?: ComponentRenderData;
   queryCache?: Record<string, unknown>;
@@ -34,7 +32,6 @@ export default function PlasmicLoaderPage(props: {
     </PlasmicRootProvider>
   );
 }
-
 export const getStaticProps: GetStaticProps = async (context) => {
   const { catchall } = context.params ?? {};
   const plasmicPath = typeof catchall === 'string' ? catchall : Array.isArray(catchall) ? `/${catchall.join('/')}` : '/';
@@ -55,10 +52,9 @@ export const getStaticProps: GetStaticProps = async (context) => {
       <PlasmicComponent component={pageMeta.displayName} />
     </PlasmicRootProvider>
   );
-  // Use revalidate if you want incremental static regeneration
-  return { props: { plasmicData, queryCache }, revalidate: 60 };
+  // Removido "revalidate": incompatível com output: 'export'
+  return { props: { plasmicData, queryCache } };
 }
-
 export const getStaticPaths: GetStaticPaths = async () => {
   const pageModules = await PLASMIC.fetchPages();
   return {
@@ -67,6 +63,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
         catchall: mod.path.substring(1).split("/"),
       },
     })),
-    fallback: "blocking",
+    // Alterado de "blocking" para false: exportação estática exige
+    // que TODAS as páginas sejam conhecidas em build time, sem fallback
+    fallback: false,
   };
 }
